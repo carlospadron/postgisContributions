@@ -33,4 +33,14 @@ CREATE OR REPLACE FUNCTION adjacentByProportion(geomA geometry, geomB geometry, 
   END;
 $$ LANGUAGE plpgsql;
 
+--Makes a simpler representation of a set of lines. It is useful for reducing scale of datasets
+--A tolerance value mas be included for the neighbour and for the simplifying factor.
+CREATE OR REPLACE FUNCTION simplifyMap(geom geometry, tolerance integer, factor numeric default .10 ) RETURNS geometry AS $$
+  DECLARE
+    factor2 := tolerance*factor;
+  BEGIN  
+    return ST_ApproximateMedialAxis(ST_Simplify(ST_Buffer(ST_Collect(geom), tolerance), factor2));
+  END;
+$$ LANGUAGE plpgsql;
+
 
