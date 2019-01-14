@@ -1,7 +1,7 @@
 --Returns true if the area of intersection is larger than both areas of the polygons after multiplied by the given proportion.
 --it helps detect polygons that are similar
 
-CREATE OR REPLACE FUNCTION similarByProportion(geomA geometry, geomB geometry, prop numeric) RETURNS boolean AS $$
+CREATE OR REPLACE FUNCTION overlapMoreThan(geomA geometry, geomB geometry, prop numeric) RETURNS boolean AS $$
   DECLARE
     areaA float := ST_Area(geomA);
     areaB float := ST_Area(geomB);   
@@ -18,7 +18,7 @@ $$ LANGUAGE plpgsql;
 
 --Returns true if the area of intersection is smaller than both areas of the polygons after multiplied by the given proportion.
 --it helps detect polygons that are adjacent but overlap a little
-CREATE OR REPLACE FUNCTION adjacentByProportion(geomA geometry, geomB geometry, prop numeric) RETURNS boolean AS $$
+CREATE OR REPLACE FUNCTION overlapLessThan(geomA geometry, geomB geometry, prop numeric) RETURNS boolean AS $$
   DECLARE
     areaA float := ST_Area(geomA);
     areaB float := ST_Area(geomB);   
@@ -35,12 +35,9 @@ $$ LANGUAGE plpgsql;
 
 --Makes a simpler representation of a set of lines. It is useful for reducing scale of datasets
 --A tolerance value mas be included for the neighbour and for the simplifying factor.
-CREATE OR REPLACE FUNCTION simplifyMap(geom geometry, tolerance integer, factor numeric default .10 ) RETURNS geometry AS $$
-  DECLARE
-    factor2 := tolerance*factor;
+CREATE OR REPLACE FUNCTION simplifyRoadMap(geom geometry, tolerance integer, factor numeric default .10 ) RETURNS geometry AS $$
   BEGIN  
-    return ST_ApproximateMedialAxis(ST_Simplify(ST_Buffer(ST_Collect(geom), tolerance), factor2));
+    return ST_ApproximateMedialAxis(ST_Buffer(ST_Buffer(ST_Simplify(geom, tolerance*factor), tolerance), -(tolerance*.99)));												  
   END;
-$$ LANGUAGE plpgsql;
-
+$$ LANGUAGE plpgsql STABLE;
 
